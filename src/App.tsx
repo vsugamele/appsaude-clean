@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bars3Icon as MenuIcon, UserIcon, CameraIcon, BeakerIcon, UserGroupIcon, AcademicCapIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon as MenuIcon, UserIcon, CameraIcon, BeakerIcon, UserGroupIcon, AcademicCapIcon, ShoppingCartIcon, ScaleIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
 
 export default function App() {
@@ -14,6 +14,10 @@ export default function App() {
 
   const handleShoppingList = () => {
     navigate('/shopping-list')
+  }
+
+  const handleBodyMeasurements = () => {
+    navigate('/body-measurements')
   }
 
   const recommendations = [
@@ -61,70 +65,82 @@ export default function App() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">
-          <button 
+          <button
             onClick={handleMealRegistration}
-            className="bg-green-500 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-green-600 transition-colors"
+            className="flex items-center justify-center gap-2 bg-white rounded-lg shadow p-4 hover:bg-gray-50"
           >
-            <CameraIcon className="h-5 w-5" />
-            Registrar Refeição
+            <CameraIcon className="h-6 w-6 text-green-600" />
+            <span className="text-gray-700">Registrar Refeição</span>
           </button>
-          <button 
-            onClick={() => navigate('/nutrition-plan')}
-            className="bg-blue-500 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"
+          <button
+            onClick={handleBodyMeasurements}
+            className="flex items-center justify-center gap-2 bg-white rounded-lg shadow p-4 hover:bg-gray-50"
           >
-            <BeakerIcon className="h-5 w-5" />
-            Plano Nutricional
-          </button>
-          <button 
-            onClick={handleShoppingList}
-            className="bg-green-500 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-green-600 transition-colors"
-          >
-            <ShoppingCartIcon className="h-5 w-5" />
-            Lista de Compras
-          </button>
-          <button 
-            onClick={() => navigate('/nutritionist-consult')}
-            className="bg-amber-500 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-amber-600 transition-colors"
-          >
-            <UserGroupIcon className="h-5 w-5" />
-            Consulta Nutricional
+            <ScaleIcon className="h-6 w-6 text-green-600" />
+            <span className="text-gray-700">Medidas Corporais</span>
           </button>
         </div>
 
-        {/* AI Recommendations */}
-        <section>
-          <h2 className="text-xl font-bold mb-4">Recomendações</h2>
-          <div className="bg-white rounded-lg shadow divide-y">
-            {recommendations.map((rec, i) => (
-              <div key={i} className="p-4 text-gray-700">
-                {rec}
-              </div>
+        {/* Recommendations */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Recomendações</h2>
+          <ul className="space-y-4">
+            {recommendations.map((recommendation, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <BeakerIcon className="h-6 w-6 text-green-600 flex-shrink-0" />
+                <p className="text-gray-700">{recommendation}</p>
+              </li>
             ))}
-          </div>
-        </section>
+          </ul>
+        </div>
 
         {/* Goals */}
-        <section>
-          <h2 className="text-xl font-bold mb-4">Suas Metas</h2>
-          <div className="bg-white rounded-lg shadow divide-y">
-            {goals.map((goal, i) => (
-              <div key={i} className="p-4 flex items-center gap-4">
-                {goal.complete && (
-                  <span className="text-green-500">✓</span>
-                )}
-                <div className="flex-1">
-                  <p className="text-gray-700">{goal.description}</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div 
-                      className="bg-green-500 h-2.5 rounded-full"
-                      style={{ width: `${goal.progress}%` }}
-                    />
-                  </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Metas Diárias</h2>
+          <div className="space-y-4">
+            {goals.map((goal, index) => (
+              <div key={index}>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-700">{goal.description}</span>
+                  <span className="text-gray-500">{goal.progress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${
+                      goal.complete ? 'bg-green-600' : 'bg-blue-600'
+                    }`}
+                    style={{ width: `${goal.progress}%` }}
+                  ></div>
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+
+        {/* Additional Features */}
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => navigate('/nutritionist-consult')}
+            className="flex flex-col items-center gap-2 bg-white rounded-lg shadow p-4 hover:bg-gray-50"
+          >
+            <UserGroupIcon className="h-6 w-6 text-green-600" />
+            <span className="text-gray-700 text-center">Consultar Nutricionista</span>
+          </button>
+          <button
+            onClick={() => navigate('/nutrition-education')}
+            className="flex flex-col items-center gap-2 bg-white rounded-lg shadow p-4 hover:bg-gray-50"
+          >
+            <AcademicCapIcon className="h-6 w-6 text-green-600" />
+            <span className="text-gray-700 text-center">Educação Nutricional</span>
+          </button>
+          <button
+            onClick={handleShoppingList}
+            className="flex flex-col items-center gap-2 bg-white rounded-lg shadow p-4 hover:bg-gray-50"
+          >
+            <ShoppingCartIcon className="h-6 w-6 text-green-600" />
+            <span className="text-gray-700 text-center">Lista de Compras</span>
+          </button>
+        </div>
       </main>
     </div>
   )

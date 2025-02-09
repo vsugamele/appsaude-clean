@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FormData } from '../types/FormData';
+import { PencilIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import MeasurementsModal from './MeasurementsModal';
 
 interface BodyMeasurementsProps {
   measurements: FormData['measurements'];
@@ -8,273 +10,126 @@ interface BodyMeasurementsProps {
 }
 
 const BodyMeasurements: React.FC<BodyMeasurementsProps> = ({ measurements, onChange, gender }) => {
-  const chest = parseFloat(measurements.chest) || 0;
-  const thigh = parseFloat(measurements.thigh) || 0;
-  const calf = parseFloat(measurements.calf) || 0;
-  const waist = parseFloat(measurements.waist) || 0;
-  const abdomen = parseFloat(measurements.abdomen) || 0;
-  const hip = parseFloat(measurements.hip) || 0;
-  const bodyFat = parseFloat(measurements.bodyFat) || 0;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [beforeImage, setBeforeImage] = useState<string | null>(null);
+  const [afterImage, setAfterImage] = useState<string | null>(null);
 
-  const handleInputChange = (field: keyof FormData['measurements'], value: string) => {
-    onChange({
-      ...measurements,
-      [field]: value
-    });
+  const handleImageUpload = (type: 'before' | 'after', file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (type === 'before') {
+        setBeforeImage(reader.result as string);
+      } else {
+        setAfterImage(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Funções para avaliar as medidas
-  const getAbdomenStatus = (value: number): 'good' | 'moderate' | 'bad' => {
-    if (gender === 'female') {
-      if (value < 80) return 'good';
-      if (value <= 88) return 'moderate';
-      return 'bad';
-    } else {
-      if (value < 94) return 'good';
-      if (value <= 102) return 'moderate';
-      return 'bad';
+  const getProgressColor = (measurement: string, type: keyof FormData['measurements']) => {
+    const value = parseFloat(measurement);
+    if (!value) return 'bg-gray-200';
+
+    switch (type) {
+      case 'abdomen':
+        if (gender === 'male') {
+          if (value < 94) return 'bg-green-500';
+          if (value <= 102) return 'bg-yellow-500';
+          return 'bg-red-500';
+        } else {
+          if (value < 80) return 'bg-green-500';
+          if (value <= 88) return 'bg-yellow-500';
+          return 'bg-red-500';
+        }
+      case 'bodyFat':
+        if (gender === 'male') {
+          if (value >= 6 && value <= 17) return 'bg-green-500';
+          if (value <= 25) return 'bg-yellow-500';
+          return 'bg-red-500';
+        } else {
+          if (value >= 14 && value <= 24) return 'bg-green-500';
+          if (value <= 31) return 'bg-yellow-500';
+          return 'bg-red-500';
+        }
+      default:
+        return value > 0 ? 'bg-blue-500' : 'bg-gray-200';
     }
   };
 
-  const getWaistHipRatioStatus = (ratio: number): 'good' | 'bad' => {
-    if (gender === 'female') {
-      return ratio <= 0.85 ? 'good' : 'bad';
-    } else {
-      return ratio <= 0.9 ? 'good' : 'bad';
-    }
-  };
-
-  const getBodyFatStatus = (value: number): 'athlete' | 'good' | 'moderate' | 'bad' => {
-    if (gender === 'female') {
-      if (value >= 14 && value <= 20) return 'athlete';
-      if (value > 20 && value <= 24) return 'good';
-      if (value > 24 && value <= 31) return 'moderate';
-      return 'bad';
-    } else {
-      if (value >= 6 && value <= 13) return 'athlete';
-      if (value > 13 && value <= 17) return 'good';
-      if (value > 17 && value <= 24) return 'moderate';
-      return 'bad';
-    }
-  };
-
-  const getStatusIcon = (status: 'athlete' | 'good' | 'moderate' | 'bad') => {
-    switch (status) {
-      case 'athlete':
-        return '🏃';
-      case 'good':
-        return '✓';
-      case 'moderate':
-        return '⚠️';
-      case 'bad':
-        return '⚠️';
-    }
-  };
-
-  const MeasurementIndicator = ({ 
-    value, 
-    unit, 
-    status,
-    label 
-  }: { 
-    value: number; 
-    unit: string; 
-    status: 'athlete' | 'good' | 'moderate' | 'bad';
-    label: string;
-  }) => (
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-sm">
-        {getStatusIcon(status)}
-      </span>
-      <div className="flex-1 h-10 sm:h-8 bg-gray-100 rounded-full overflow-hidden relative">
-        <div 
-          className={`h-full rounded-full transition-all duration-300 ${
-            status === 'athlete' ? 'bg-green-500' :
-            status === 'good' ? 'bg-lime-500' :
-            status === 'moderate' ? 'bg-yellow-500' :
-            'bg-red-500'
-          }`}
-          style={{ width: '100%' }}
-        >
-          {/* Label dentro da barra */}
-          <div className="absolute inset-0 flex items-center px-4 text-sm text-white font-medium">
-            {label}
-          </div>
-        </div>
-      </div>
-      <span className="text-sm font-medium min-w-[50px] text-right">
-        {value}{unit}
-      </span>
-    </div>
-  );
+  const keyMeasurements = [
+    { id: 'abdomen', label: 'Abdômen' },
+    { id: 'bodyFat', label: '% Gordura' },
+    { id: 'chest', label: 'Tórax' },
+    { id: 'waist', label: 'Cintura' },
+  ];
 
   return (
-    <div className="w-full max-w-sm mx-auto">
-      <div className="space-y-2">
-        {/* Gordura Corporal */}
-        <MeasurementIndicator
-          value={bodyFat}
-          unit="%"
-          status={getBodyFatStatus(bodyFat)}
-          label="Gordura Corporal"
-        />
+    <>
+      <div className="bg-white rounded-lg p-4 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Medidas Principais</h3>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <PencilIcon className="h-4 w-4 mr-1" />
+            Editar
+          </button>
+        </div>
 
-        {/* Tórax */}
-        <MeasurementIndicator
-          value={chest}
-          unit="cm"
-          status={chest > 0 ? 'good' : 'moderate'}
-          label="Tórax"
-        />
+        <div className="grid grid-cols-2 gap-3">
+          {keyMeasurements.map((measure) => (
+            <div key={measure.id} className="bg-gray-50 p-3 rounded-lg">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium text-gray-600">{measure.label}</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {measurements[measure.id as keyof FormData['measurements']] || '0'}
+                  {measure.id === 'bodyFat' ? '%' : 'cm'}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className={`h-full ${getProgressColor(
+                    measurements[measure.id as keyof FormData['measurements']],
+                    measure.id as keyof FormData['measurements']
+                  )}`}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
 
-        {/* Cintura */}
-        <MeasurementIndicator
-          value={waist}
-          unit="cm"
-          status={getWaistHipRatioStatus(waist/hip)}
-          label="Cintura"
-        />
-
-        {/* Abdômen */}
-        <MeasurementIndicator
-          value={abdomen}
-          unit="cm"
-          status={getAbdomenStatus(abdomen)}
-          label="Abdômen"
-        />
-
-        {/* Quadril */}
-        <MeasurementIndicator
-          value={hip}
-          unit="cm"
-          status={getWaistHipRatioStatus(waist/hip)}
-          label="Quadril"
-        />
-
-        {/* Coxa */}
-        <MeasurementIndicator
-          value={thigh}
-          unit="cm"
-          status={thigh > 0 ? 'good' : 'moderate'}
-          label="Coxa"
-        />
-
-        {/* Panturrilha */}
-        <MeasurementIndicator
-          value={calf}
-          unit="cm"
-          status={calf > 0 ? 'good' : 'moderate'}
-          label="Panturrilha"
-        />
+        {/* Miniaturas das fotos */}
+        {(beforeImage || afterImage) && (
+          <div className="mt-4 flex gap-4">
+            {beforeImage && (
+              <div className="relative w-16 h-16">
+                <img src={beforeImage} alt="Antes" className="w-full h-full object-cover rounded-md" />
+                <span className="absolute -top-2 -right-2 bg-gray-100 text-xs px-1 rounded">Antes</span>
+              </div>
+            )}
+            {afterImage && (
+              <div className="relative w-16 h-16">
+                <img src={afterImage} alt="Depois" className="w-full h-full object-cover rounded-md" />
+                <span className="absolute -top-2 -right-2 bg-gray-100 text-xs px-1 rounded">Depois</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Legenda */}
-      <div className="mt-4 flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-xs text-gray-600">
-        <span>Atleta</span>
-        <span className="hidden sm:inline">|</span>
-        <span>Bom</span>
-        <span className="hidden sm:inline">|</span>
-        <span>Moderado</span>
-        <span className="hidden sm:inline">|</span>
-        <span className="text-red-500">Atenção</span>
-      </div>
-      <div className="text-center text-xs text-gray-500 mt-1">
-        Baseado nas diretrizes da OMS
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Circunferência Torácica (cm)
-          </label>
-          <input
-            type="number"
-            value={measurements.chest}
-            onChange={(e) => handleInputChange('chest', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Circunferência da Coxa (cm)
-          </label>
-          <input
-            type="number"
-            value={measurements.thigh}
-            onChange={(e) => handleInputChange('thigh', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Circunferência da Panturrilha (cm)
-          </label>
-          <input
-            type="number"
-            value={measurements.calf}
-            onChange={(e) => handleInputChange('calf', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Circunferência Abdominal (cm)
-          </label>
-          <input
-            type="number"
-            value={measurements.abdomen}
-            onChange={(e) => handleInputChange('abdomen', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Circunferência da Cintura (cm)
-          </label>
-          <input
-            type="number"
-            value={measurements.waist}
-            onChange={(e) => handleInputChange('waist', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Circunferência do Quadril (cm)
-          </label>
-          <input
-            type="number"
-            value={measurements.hip}
-            onChange={(e) => handleInputChange('hip', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Percentual de Gordura (%)
-          </label>
-          <input
-            type="number"
-            value={measurements.bodyFat}
-            onChange={(e) => handleInputChange('bodyFat', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="0"
-          />
-        </div>
-      </div>
-    </div>
+      <MeasurementsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        measurements={measurements}
+        onChange={onChange}
+        gender={gender}
+        beforeImage={beforeImage}
+        afterImage={afterImage}
+        onImageUpload={handleImageUpload}
+      />
+    </>
   );
 };
 

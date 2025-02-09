@@ -13,6 +13,7 @@ import NutritionEducation from './pages/NutritionEducation'
 import ArticleDetail from './pages/ArticleDetail'
 import RecipeResult from './pages/RecipeResult'
 import SmartShoppingList from './pages/SmartShoppingList'
+import BodyMeasurementsPage from './pages/BodyMeasurements'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/content/:id" element={<ArticleDetail />} />
         <Route path="/recipe-result" element={<RecipeResult />} />
         <Route path="/shopping-list" element={<SmartShoppingList />} />
+        <Route path="/body-measurements" element={<BodyMeasurementsPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,
